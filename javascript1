@@ -1,0 +1,22 @@
+// Function triggered whenever a consumer submits a lead
+async function processAndChargeLead(leadData, matchedDealer) {
+  const LEAD_PRICE_CENTS = 3500; // Example: $35.00 per verified lead
+
+  try {
+    // 1. Send Lead to Dealer via SMS & Email
+    await sendSMS(matchedDealer.phone, `New CATPOTS Lead: ${leadData.name} - ${leadData.issue}`);
+
+    // 2. Charge Dealer Saved Payment Method on File via Stripe
+    await stripe.paymentIntents.create({
+      amount: LEAD_PRICE_CENTS,
+      currency: 'usd',
+      customer: matchedDealer.stripeCustomerId,
+      off_session: true,
+      confirm: true,
+      description: `CATPOTS Lead Generation - Vehicle: ${leadData.vehicle}`,
+    });
+
+  } catch (err) {
+    console.error("Payment failed or lead delivery error:", err);
+  }
+}
